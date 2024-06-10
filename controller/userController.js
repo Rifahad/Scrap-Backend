@@ -9,7 +9,6 @@ module.exports = {
       next(error);
     }
   },
-
   userdelete: async (req, res) => {
     try {
       const id = req.query.id;

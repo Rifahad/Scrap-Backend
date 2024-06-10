@@ -1,5 +1,4 @@
 const { Cardmodel } = require("../model/Carddata");
-// admin card
 module.exports = {
   // this path for saving card details on data base
   cardPost: async (req, res, next) => {
@@ -10,6 +9,7 @@ module.exports = {
         title,
         price,
         Image: "/assets/cardImages/" + req.file.filename,
+
       });
       await newData.save();
       res.status(201).json({ success: true, message: "product" });
@@ -18,11 +18,9 @@ module.exports = {
     }
   },
 
-  // this path is for loop the card
-
+  // this path is for loop the card in user side
   carddetailspost: async (req, res) => {
     try {
-      console.log("triggered");
       const carddetails = await Cardmodel.find();
       console.log("----", carddetails);
       res.json({ carddetails });
@@ -31,9 +29,7 @@ module.exports = {
       res.status(500).json({ error: "Internal Server Error" });
     }
   },
-
   // this path for admin product page looping
-
   adminCard: async (req, res) => {
     try {
       const adminCard = await Cardmodel.find();
@@ -42,9 +38,26 @@ module.exports = {
       console.log(error, "error in admincard check in card controller");
     }
   },
+
+  // this path for delete admin prodect card
   adminproductdelete: async (req, res) => {
     const id = req.query.id;
     await Cardmodel.deleteOne({ _id: id });
     res.status(200).json({ success: true });
   },
+
+
+
+  // this path for edit product in admin card 
+adminproductedit :async (req,res)=> {
+  const id = req.query.id
+console.log('id gotted  ',id);
+const newdata = await Cardmodel.findById(id)
+console.log('edit data',newdata)
+res.status(200).json({success:true,newdata})
+
+
+}
+
+
 };

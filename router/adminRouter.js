@@ -3,14 +3,13 @@ const express = require('express');
 const Router = express.Router();
 const multer = require('multer');
 const { storage } = require('../middleware/multer'); // Ensure correct import
-const { cardPost, carddetailspost,adminCard, adminproductdelete } = require('../controller/cardController');
-const {user,userdelete}=require('../controller/userController')
+const { cardPost,adminCard,adminproductdelete ,adminproductedit} = require('../controller/cardController');
+const {user,userdelete,}=require('../controller/userController');
+const{filterdate}=require('../controller/pickupController')
 
 const upload = multer({ storage });
 // saving card details in database 
 Router.post('/card', upload.single("file"), cardPost);
-// card details sending to backend to frondend 
-Router.post('/products', carddetailspost);
 
 // user data sending to frondend 
 Router.get('/Users',user)
@@ -19,11 +18,16 @@ Router.get('/Users',user)
 Router.post('/admin/User/delete',userdelete)
 
 
-// admin product card path 
-Router.get('/Products',adminCard)
+// admin product card path  for passing data to front end
+Router.get('/adminProduct',adminCard)
 
-//
+// admin product card delete path
 Router.post('/productdelete',adminproductdelete)
 
 
+// admin product card edit path 
+Router.get('/editProduct',adminproductedit)
 module.exports = Router;
+
+
+
