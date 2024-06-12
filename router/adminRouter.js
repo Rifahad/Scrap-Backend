@@ -6,9 +6,11 @@ const { storage } = require('../middleware/multer'); // Ensure correct import
 const { cardPost,adminCard,adminproductdelete ,adminproductedit ,updateProduct} = require('../controller/cardController');
 const {user,userdelete,}=require('../controller/userController');
 const{filterdate}=require('../controller/pickupController')
+const {Login} = require('../controller/authController')
 
 const upload = multer({ storage });
 // saving card details in database 
+Router.post('/AdminLogin',Login)
 Router.post('/card', upload.single("file"), cardPost);
 
 // user data sending to frondend 
