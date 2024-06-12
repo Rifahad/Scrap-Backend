@@ -4,12 +4,12 @@ const {pickPost}=require('../controller/pickupController')
 const {adminCard}=require('../controller/cardController')
 const { carddetailspost, } = require('../controller/cardController');
 
-const pickupstorage =require('../middleware/multer')
+const {pickupstorage} =require('../middleware/multer')
 const multer = require('multer')
-const upload =multer({pickupstorage})
+const upload =multer({storage:pickupstorage})
 
 // pickup data saving to database 
-router.post('/pickup', upload.single('kilogram'),pickPost)
+router.post('/pickup', upload.single('pickupImage'), pickPost);
 
 // this path for sending data backend to frondend for product looping
 router.post('/products', carddetailspost);

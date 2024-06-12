@@ -11,6 +11,7 @@ const storage = multer.diskStorage({
   }
 });
 
+
 const pickupstorage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join(__dirname, '../public/assets/pickupImage'));
@@ -21,10 +22,7 @@ const pickupstorage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage: pickupstorage });
-
 module.exports = {
   storage,
-  pickupstorage,
-  upload 
+  pickupstorage
 };
