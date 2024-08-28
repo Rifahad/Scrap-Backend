@@ -1,50 +1,117 @@
 const { Cardmodel } = require("../model/Carddata");
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+
+const crypto = require("crypto");
+const randomImage = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
+
+const AccessKeyId = process.env.AWS_ACCESS_KEY_ID;
+const SecretAccessKeyId = process.env.AWS_SECRET_ACCESS_KEY;
+const bucketRegion = process.env.AWS_REGION;
+const bucketName = process.env.AWS_S3_BUCKET_NAME;
+
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: AccessKeyId,
+    secretAccessKey: SecretAccessKeyId,
+  },
+  region: bucketRegion,
+});
 
 module.exports = {
-  // this path for saving card details on data base
+  // Save card details in the database
   cardPost: async (req, res, next) => {
     try {
-      const body = Object.assign({}, req.body);
-      const { title, price } = body;
-      const newData = new Cardmodel({
-        title,
-        price,
-        Image: "/assets/cardImages/" + req.file.filename,
-      });
+      const imageName = randomImage();
+      const params = {
+        Bucket: bucketName,
+        Key: imageName,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      };
+      await s3.send(new PutObjectCommand(params));
+      
+      const { title, price } = req.body;
+      const newData = new Cardmodel({ title, price, Image: imageName });
       await newData.save();
-      res.status(201).json({ success: true, message: "product" });
+
+      res.status(201).json({ success: true, message: "Product added successfully" });
     } catch (err) {
       next(err);
     }
   },
 
-  // this path is for loop the card in user side
+  // Retrieve and return card details with signed image URLs
   carddetailspost: async (req, res) => {
     try {
-      const carddetails = await Cardmodel.find();
-      console.log("----", carddetails);
-      res.json({ carddetails });
+      const cardDetails = await Cardmodel.find();
+      const cardsWithUrls = await Promise.all(
+        cardDetails.map(async (card) => {
+          const getObjectParams = {
+            Bucket: bucketName,
+            Key: card.Image,
+          };
+          const url = await getSignedUrl(s3, new GetObjectCommand(getObjectParams), { expiresIn: 3600 });
+          return { ...card.toObject(), Url: url };
+        })
+      );
+      res.json({ carddetails: cardsWithUrls });
     } catch (err) {
-      console.log(err, "error in card passing to frontend");
+      console.error("Error retrieving card details:", err);
       res.status(500).json({ error: "Internal Server Error" });
     }
   },
-  // this path for admin product page looping
+
+  // Retrieve and return admin cards with signed image URLs
   adminCard: async (req, res) => {
     try {
-      const adminCard = await Cardmodel.find();
-      res.json({ adminCard: adminCard });
+      const adminCards = await Cardmodel.find();
+      const cardsWithUrls = await Promise.all(
+        adminCards.map(async (card) => {
+          const getObjectParams = {
+            Bucket: bucketName,
+            Key: card.Image,
+          };
+          const url = await getSignedUrl(s3, new GetObjectCommand(getObjectParams), { expiresIn: 3600 });
+          return { ...card.toObject(), Url: url };
+        })
+      );
+      res.json({ adminCard: cardsWithUrls });
     } catch (error) {
-      console.log(error, "error in admincard check in card controller");
+      console.error("Error retrieving admin cards:", error);
+      res.status(500).json({ error: "Internal Server Error" });
     }
   },
 
-  // this path for delete admin prodect card
+  // Delete a product and its image from S3
   adminproductdelete: async (req, res) => {
-    const id = req.query.id;
-    await Cardmodel.deleteOne({ _id: id });
-    res.status(200).json({ success: true });
+    try {
+      const id = req.query.id;
+      const product = await Cardmodel.findById(id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      const deleteParams = {
+        Bucket: bucketName,
+        Key: product.Image,
+      };
+      await s3.send(new DeleteObjectCommand(deleteParams));
+      await Cardmodel.deleteOne({ _id: id });
+
+      res.status(200).json({ success: true, message: "Product deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
   },
+
+  // Retrieve product details for editing
   adminproductedit: async (req, res) => {
     try {
       const { id } = req.params;
@@ -57,32 +124,38 @@ module.exports = {
       res.status(500).json({ error: error.message });
     }
   },
-  updateProduct: async (req, res) => {
-    const { id } = req.params;
-    const { title, price } = req.body;
 
+  // Update product details
+  updateProduct: async (req, res) => {
     try {
-      const updatedData = {
-        title,
-        price,
-      };
+      const { id } = req.params;
+      const { title, price } = req.body;
+      const updatedData = { title, price };
 
       if (req.file) {
-        updatedData.Image = "/assets/cardImages/" + req.file.filename;
+        updatedData.Image = randomImage(); // Replace image if new file is provided
+        const params = {
+          Bucket: bucketName,
+          Key: updatedData.Image,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype,
+        };
+        await s3.send(new PutObjectCommand(params));
       }
 
       const updatedProduct = await Cardmodel.findByIdAndUpdate(id, updatedData, { new: true });
       if (!updatedProduct) {
-        return res.status(404).json({ message: 'Product not found' });
+        return res.status(404).json({ message: "Product not found" });
       }
 
-      res.status(200).json({ success: true, message: 'Product updated successfully', product: updatedProduct });
+      res.status(200).json({
+        success: true,
+        message: "Product updated successfully",
+        product: updatedProduct,
+      });
     } catch (error) {
-      console.error('Error updating product:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      console.error("Error updating product:", error);
+      res.status(500).json({ error: "Internal Server Error" });
     }
   },
-
-
-
 };

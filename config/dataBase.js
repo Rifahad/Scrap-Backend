@@ -1,8 +1,11 @@
 const mongoose = require('mongoose');
+require("dotenv").config()
+
+const url = process.env.ATLAS_URL
 
 const Dbconnection = async () => {
     try {
-        await mongoose.connect('mongodb://localhost/scrap', {
+        await mongoose.connect(url, {
             useNewUrlParser: true, // Only this option is necessary
         });
         console.log('Database connected');

@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+require("dotenv").config();
 const port = process.env.PORT || 7000;
 const path = require("path");
 const cors = require("cors");
@@ -8,8 +9,13 @@ const userRouter = require("./router/userRouter");
 const agentRouter = require("./router/CompanyRouter");
 const DashboardRouter = require("./router/DashboardRouter");
 const Dbconnection = require("./config/dataBase");
-require("dotenv").config();
-Dbconnection();
+
+
+Dbconnection().then(()=>{
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+});
 
 const corsOptions = {
   origin: "http://localhost:5173",
@@ -28,6 +34,3 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: "internal server error" });
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
