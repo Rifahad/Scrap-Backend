@@ -9,9 +9,8 @@ const userRouter = require("./router/userRouter");
 const agentRouter = require("./router/CompanyRouter");
 const DashboardRouter = require("./router/DashboardRouter");
 const Dbconnection = require("./config/dataBase");
-
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:5173", // Update this with your actual frontend URL in production
+  origin: '*' || "http://localhost:5173", // Update this with your actual frontend URL in production
   maxAge: 86400, // 1 day
 };
 app.use(cors(corsOptions));
@@ -20,8 +19,10 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, "public")));
+
 
 // Use routers
 app.use("/", adminRouter);
