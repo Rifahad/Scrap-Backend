@@ -4,33 +4,42 @@ const { Company } = require("../model/companymodel");
 module.exports = {
   totalUserCount: async (req, res) => {
     try {
-      const totaluser = await pickupupload.countDocuments();
+      const totalUser = await pickupupload.countDocuments(); // Assuming users are tracked in `pickupupload`
       const userData = await pickupupload.find();
-      res.json({ count: totaluser, userData: userData });
+      res.json({ count: totalUser, userData });
     } catch (error) {
       console.error("Error fetching total user count:", error);
       res.status(500).json({ message: "Error fetching total user count" });
     }
   },
+
   totalAgentCount: async (req, res) => {
     try {
-      const totalagent = await Company.countDocuments();
-      res.json({ count: totalagent });
-    } catch (error) {}
-  },
-  totalPickupCount: async (req, res) => {
-    try {
-      const totaluser = await pickupupload.countDocuments();
-      res.json({ count: totaluser });
+      const totalAgent = await Company.countDocuments();
+      res.json({ count: totalAgent });
     } catch (error) {
-      console.error("Error fetching total user count:", error);
-      res.status(500).json({ message: "Error fetching total user count" });
+      console.error("Error fetching total agent count:", error);
+      res.status(500).json({ message: "Error fetching total agent count" });
     }
   },
+
+  totalPickupCount: async (req, res) => {
+    try {
+      const totalPickups = await pickupupload.countDocuments(); // Counting total pickups, not users
+      res.json({ count: totalPickups });
+    } catch (error) {
+      console.error("Error fetching total pickup count:", error);
+      res.status(500).json({ message: "Error fetching total pickup count" });
+    }
+  },
+
   totalAgentPickupCount: async (req, res) => {
     try {
-      const totalagent = await Company.countDocuments();
-      res.json({ count: totalagent });
-    } catch (error) {}
+      const totalAgentPickups = await pickupupload.countDocuments({ agentAssigned: { $exists: true } }); // Assuming `agentAssigned` field marks pickups handled by agents
+      res.json({ count: totalAgentPickups });
+    } catch (error) {
+      console.error("Error fetching total agent pickup count:", error);
+      res.status(500).json({ message: "Error fetching total agent pickup count" });
+    }
   },
 };

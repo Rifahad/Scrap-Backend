@@ -8,6 +8,9 @@ const {
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const crypto = require("crypto");
+const sharp = require("sharp"); // Add sharp for image processing
+
+
 const randomImage = (bytes = 32) => crypto.randomBytes(bytes).toString("hex");
 
 const AccessKeyId = process.env.AWS_ACCESS_KEY_ID;
@@ -28,17 +31,22 @@ module.exports = {
   cardPost: async (req, res, next) => {
     try {
       const imageName = randomImage();
+      const processedImage = await sharp(req.file.buffer)
+        .resize({ width: 1200 }) // Resize the image to 800px width
+        .jpeg({ quality: 80 })   // Convert to JPEG and set quality to 80%
+        .toBuffer();  
+
       const params = {
         Bucket: bucketName,
         Key: imageName,
-        Body: req.file.buffer,
+        Body: processedImage,
         ContentType: req.file.mimetype,
       };
       await s3.send(new PutObjectCommand(params));
       
       const { title, price } = req.body;
       const newData = new Cardmodel({ title, price, Image: imageName });
-      await newData.save();
+      await newData.save(); 
 
       res.status(201).json({ success: true, message: "Product added successfully" });
     } catch (err) {

@@ -12,6 +12,6 @@ Router.get("/dashboard/totalPickupCount", totalPickupCount);
 Router.get("/dashboard/totalUserCount", totalUserCount);
 Router.get("/dashboard/totalAgentPickupCount", totalAgentPickupCount);
 
-module.exports =   Router
+module.exports = Router
 
   

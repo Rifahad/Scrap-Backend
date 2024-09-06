@@ -5,6 +5,7 @@ const {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
@@ -54,8 +55,6 @@ module.exports = {
   agentCard: async (req, res) => {
     try {
       const imageName = randomImage();
-      console.log(req.file);
-
       const params = {
         Bucket: bucketName,
         Key: imageName,
