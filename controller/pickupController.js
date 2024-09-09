@@ -35,8 +35,7 @@ module.exports = {
         ...req.body,
         pickupImage: imageName, 
       });
-      await newdata.save();
-      
+      await newdata.save();      
       res.status(200).json({ message: true, data: newdata });
     } catch (error) {
       console.log(error, "error in pickup post");
